@@ -3,501 +3,99 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GLB viewer + AR QR code</title>
+<title>View in AR</title>
 <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --ink:#151311;
     --paper:#f6f3ec;
-    --panel:#ffffff;
-    --line:#e2ddd0;
-    --brass:#a8763e;
-    --brass-dark:#7c5628;
-    --moss:#4c6b52;
     --muted:#8a8378;
-    --radius:10px;
   }
   *{box-sizing:border-box;}
-  body{
+  html,body{
     margin:0;
-    font-family:'Iowan Old Style','Palatino Linotype',Georgia,serif;
+    height:100%;
     background:var(--paper);
     color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-  }
-  header{
-    padding:2.5rem 1.5rem 1.5rem;
-    text-align:center;
-    border-bottom:1px solid var(--line);
-  }
-  header h1{
-    font-size:1.9rem;
-    font-weight:400;
-    letter-spacing:0.01em;
-    margin:0 0 0.35rem;
-  }
-  header p{
     font-family:'Helvetica Neue',Arial,sans-serif;
-    color:var(--muted);
-    font-size:0.92rem;
-    margin:0;
-    letter-spacing:0.02em;
   }
-  .eyebrow{
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.72rem;
-    text-transform:uppercase;
-    letter-spacing:0.16em;
-    color:var(--brass-dark);
-    margin-bottom:0.5rem;
-    display:block;
-  }
-  main{
-    max-width:960px;
-    margin:0 auto;
-    padding:2rem 1.5rem 4rem;
-    display:grid;
-    grid-template-columns:1fr;
-    gap:1.5rem;
-  }
-  @media(min-width:800px){
-    main{grid-template-columns:1.3fr 1fr;}
-  }
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:1.5rem;
-  }
-  .panel h2{
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.78rem;
-    text-transform:uppercase;
-    letter-spacing:0.14em;
-    font-weight:600;
-    color:var(--brass-dark);
-    margin:0 0 1rem;
-  }
-  .tabs{
+  body{
     display:flex;
-    gap:0;
-    border:1px solid var(--line);
-    border-radius:999px;
-    overflow:hidden;
-    margin-bottom:1.25rem;
-    font-family:'Helvetica Neue',Arial,sans-serif;
-  }
-  .tab{
-    flex:1;
-    text-align:center;
-    padding:0.55rem 0.5rem;
-    cursor:pointer;
-    font-size:0.85rem;
-    color:var(--muted);
-    background:var(--panel);
-    transition:background 0.15s,color 0.15s;
-    user-select:none;
-  }
-  .tab.active{
-    background:var(--ink);
-    color:var(--paper);
-  }
-  .field{margin-bottom:1rem;}
-  .field label{
-    display:block;
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.78rem;
-    color:var(--muted);
-    margin-bottom:0.4rem;
-  }
-  input[type="text"], input[type="url"]{
-    width:100%;
-    padding:0.65rem 0.75rem;
-    font-size:0.95rem;
-    border:1px solid var(--line);
-    border-radius:6px;
-    background:#fffdf9;
-    color:var(--ink);
-    font-family:'Helvetica Neue',Arial,sans-serif;
-  }
-  input[type="text"]:focus, input[type="url"]:focus{
-    outline:none;
-    border-color:var(--brass);
-  }
-  .file-drop{
-    border:1.5px dashed var(--line);
-    border-radius:8px;
-    padding:1.6rem 1rem;
-    text-align:center;
-    cursor:pointer;
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    color:var(--muted);
-    font-size:0.88rem;
-    transition:border-color 0.15s,background 0.15s;
-  }
-  .file-drop:hover, .file-drop.drag{
-    border-color:var(--brass);
-    background:#fbf7ef;
-  }
-  .file-drop input{display:none;}
-  .file-drop .fname{
-    color:var(--ink);
-    font-weight:600;
-    margin-top:0.3rem;
-    word-break:break-all;
-  }
-  button{
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.85rem;
-    letter-spacing:0.03em;
-    padding:0.65rem 1.1rem;
-    border-radius:6px;
-    border:1px solid var(--ink);
-    background:var(--ink);
-    color:var(--paper);
-    cursor:pointer;
-    transition:opacity 0.15s;
-    width:100%;
-  }
-  button:hover{opacity:0.85;}
-  button:disabled{
-    opacity:0.35;
-    cursor:not-allowed;
-  }
-  .note{
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.78rem;
-    color:var(--muted);
-    line-height:1.55;
-    margin-top:0.9rem;
-    padding-top:0.9rem;
-    border-top:1px solid var(--line);
-  }
-  .note.warn{color:var(--brass-dark);}
-  .note strong{color:var(--ink);}
-  model-viewer{
-    width:100%;
-    height:340px;
-    background:#eee9dc;
-    border-radius:8px;
-    --poster-color:transparent;
-  }
-  .viewer-wrap{position:relative;}
-  .ar-hint{
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.75rem;
-    color:var(--muted);
-    text-align:center;
-    margin-top:0.6rem;
-  }
-  .empty-viewer{
-    height:340px;
-    border-radius:8px;
-    background:#eee9dc;
-    display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
-    color:var(--muted);
-    font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.85rem;
+    padding:1.25rem;
+  }
+  model-viewer{
+    width:100%;
+    max-width:640px;
+    height:60vh;
+    min-height:320px;
+    background:#eee9dc;
+    border-radius:10px;
+  }
+  .caption{
+    max-width:520px;
     text-align:center;
-    padding:1rem;
-  }
-  #qr-block{
-    display:none;
-    text-align:center;
-  }
-  #qr-block.show{display:block;}
-  #qrcode{
-    display:inline-block;
-    padding:14px;
-    background:#fff;
-    border-radius:8px;
-    border:1px solid var(--line);
-    margin:0.5rem 0 1rem;
-  }
-  .link-row{
-    display:flex;
-    gap:0.5rem;
-    margin-top:0.5rem;
-  }
-  .link-row input{
-    flex:1;
-    font-size:0.78rem;
+    font-size:0.95rem;
     color:var(--muted);
+    margin-top:1rem;
+    line-height:1.5;
   }
-  .copy-btn{
-    width:auto;
-    padding:0.5rem 0.8rem;
-    font-size:0.78rem;
+  .caption strong{color:var(--ink);}
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.95rem;
+    max-width:400px;
   }
-  .status{
+  ::part(default-ar-button){
     font-family:'Helvetica Neue',Arial,sans-serif;
-    font-size:0.8rem;
-    color:var(--moss);
-    margin-top:0.5rem;
-    display:none;
   }
-  .status.show{display:block;}
 </style>
 </head>
 <body>
+  <div id="app"></div>
 
-<header>
-  <span class="eyebrow">GLB preview &amp; mobile AR</span>
-  <h1>View it. Share it. See it in your space.</h1>
-  <p>Load a 3D model, preview it here, then generate a QR code someone can scan to view it in AR on their own phone.</p>
-</header>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const modelUrl = params.get('model');
+    const usdzUrl = params.get('usdz');
+    const app = document.getElementById('app');
 
-<main>
-  <section class="panel">
-    <h2>Model</h2>
-
-    <div class="tabs">
-      <div class="tab active" data-tab="url">Paste a URL</div>
-      <div class="tab" data-tab="upload">Upload a file</div>
-    </div>
-
-    <div id="tab-url">
-      <div class="field">
-        <label for="url-input">Link to a .glb file (hosted online)</label>
-        <input type="url" id="url-input" placeholder="https://example.com/model.glb" />
-      </div>
-      <div class="field">
-        <label for="page-url-input">This tool's public URL, once you've hosted it (recommended)</label>
-        <input type="url" id="page-url-input" placeholder="https://yourname.github.io/3d-models/viewer.html" />
-      </div>
-      <button id="load-url-btn">Load model</button>
-      <div class="note">
-        <strong>Host this HTML file itself, not just the .glb.</strong> If you fill in the field above, the QR code will point to this page (with the model URL attached), so scanning it always opens the correct preview and AR button. Leave it blank and the QR will point straight at the .glb file instead — this can work but behaves inconsistently across phones, since there's no page to run the AR handoff logic.
-      </div>
-      <div class="note">
-        <strong>iOS note:</strong> Apple's AR Quick Look expects a .usdz file, not .glb. When this page's AR button is tapped on an iPhone, model-viewer tries to auto-generate a .usdz on the fly, but this only works reliably for simple models and isn't guaranteed. If AR fails specifically on iPhone but works on Android, exporting a .usdz version alongside your .glb (many 3D tools can do this) and hosting both is the more dependable fix.
-      </div>
-    </div>
-
-    <div id="tab-upload" style="display:none;">
-      <div class="field">
-        <div class="file-drop" id="drop-zone">
-          <div>Drag a .glb file here, or click to choose one</div>
-          <div class="fname" id="fname"></div>
-          <input type="file" id="file-input" accept=".glb,model/gltf-binary" />
-        </div>
-      </div>
-      <div class="note warn">
-        <strong>Local preview only.</strong> A file on your computer isn't reachable by other phones, so it can't be turned into a scannable AR link. To share AR with someone else, host the .glb somewhere public and use the URL tab instead.
-      </div>
-    </div>
-
-    <div class="status" id="status"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Preview</h2>
-    <div id="viewer-area">
-      <div class="empty-viewer">Load a model to see it here</div>
-    </div>
-    <div class="ar-hint" id="ar-hint"></div>
-
-    <div id="qr-block" style="margin-top:1.5rem;">
-      <h2>Scan to view in AR</h2>
-      <div id="qrcode"></div>
-      <div class="link-row">
-        <input type="text" id="share-link" readonly />
-        <button class="copy-btn" id="copy-btn">Copy</button>
-      </div>
-      <div class="field" style="margin-top:1rem; text-align:left;">
-        <label for="logo-input">Add a logo or thumbnail in the center (optional)</label>
-        <input type="file" id="logo-input" accept="image/*" style="width:100%; font-size:0.8rem; font-family:'Helvetica Neue',Arial,sans-serif;" />
-      </div>
-      <div class="note" id="logo-note" style="display:none;">
-        A logo covers part of the code, so scannability depends on error-correction, not luck. This tool uses the highest correction level and keeps the image small, but always <strong>test-scan the result yourself</strong> before printing or sharing it widely. Simple, high-contrast logos work best — busy photos are more likely to cause scan failures.
-      </div>
-    </div>
-  </section>
-</main>
-
-<script>
-  const tabs = document.querySelectorAll('.tab');
-  const tabUrl = document.getElementById('tab-url');
-  const tabUpload = document.getElementById('tab-upload');
-  tabs.forEach(t => t.addEventListener('click', () => {
-    tabs.forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    if(t.dataset.tab === 'url'){
-      tabUrl.style.display = 'block';
-      tabUpload.style.display = 'none';
+    if(!modelUrl){
+      app.innerHTML = '<div class="empty">No model was specified in this link.</div>';
     } else {
-      tabUrl.style.display = 'none';
-      tabUpload.style.display = 'block';
-    }
-  }));
-
-  const viewerArea = document.getElementById('viewer-area');
-  const arHint = document.getElementById('ar-hint');
-  const qrBlock = document.getElementById('qr-block');
-  const qrcodeDiv = document.getElementById('qrcode');
-  const shareLinkInput = document.getElementById('share-link');
-  const statusEl = document.getElementById('status');
-
-  function showStatus(msg, isError){
-    statusEl.textContent = msg;
-    statusEl.style.color = isError ? '#a33' : 'var(--moss)';
-    statusEl.classList.add('show');
-  }
-
-  function buildViewer(src, enableAR){
-    viewerArea.innerHTML = '';
-    const mv = document.createElement('model-viewer');
-    mv.setAttribute('src', src);
-    mv.setAttribute('camera-controls', '');
-    mv.setAttribute('auto-rotate', '');
-    mv.setAttribute('shadow-intensity', '1');
-    mv.setAttribute('exposure', '1');
-    mv.setAttribute('tone-mapping', 'neutral');
-    if(enableAR){
+      const mv = document.createElement('model-viewer');
+      mv.setAttribute('src', modelUrl);
+      if(usdzUrl){
+        mv.setAttribute('ios-src', usdzUrl);
+      }
+      mv.setAttribute('camera-controls', '');
+      mv.setAttribute('auto-rotate', '');
+      mv.setAttribute('shadow-intensity', '1');
+      mv.setAttribute('exposure', '1');
+      mv.setAttribute('tone-mapping', 'neutral');
       mv.setAttribute('ar', '');
       mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-      const btn = document.createElement('button');
-      btn.slot = 'ar-button';
-      btn.textContent = 'View in your space';
-      btn.style.cssText = 'position:absolute;bottom:12px;left:50%;transform:translateX(-50%);width:auto;padding:0.5rem 1rem;font-size:0.8rem;';
-      mv.appendChild(btn);
+
+      const arButton = document.createElement('button');
+      arButton.slot = 'ar-button';
+      arButton.textContent = 'View in your space';
+      arButton.style.cssText = 'position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:0.7rem 1.3rem;font-size:0.9rem;font-family:Helvetica Neue,Arial,sans-serif;background:#151311;color:#f6f3ec;border:none;border-radius:999px;cursor:pointer;';
+
+      mv.appendChild(arButton);
+      app.appendChild(mv);
+
+      const caption = document.createElement('div');
+      caption.className = 'caption';
+      caption.innerHTML = 'Drag to rotate. Tap <strong>View in your space</strong> to place it in AR using your camera.';
+      app.appendChild(caption);
+
+      mv.addEventListener('error', () => {
+        app.innerHTML = '<div class="empty">This model couldn\'t be loaded. The link may be broken.</div>';
+      });
     }
-    viewerArea.appendChild(mv);
-    mv.addEventListener('error', () => {
-      showStatus('Could not load that model. Check the file or link and try again.', true);
-    });
-    return mv;
-  }
-
-  // --- URL mode ---
-  function loadFromUrl(modelUrl){
-    if(!modelUrl){
-      showStatus('Paste a link to a .glb file first.', true);
-      return;
-    }
-    statusEl.classList.remove('show');
-    buildViewer(modelUrl, true);
-    arHint.textContent = 'On a compatible phone, tap "View in your space" above to launch AR directly here too.';
-
-    const pageUrl = document.getElementById('page-url-input').value.trim();
-    let shareUrl;
-    let usedPage = false;
-    if(pageUrl){
-      const sep = pageUrl.includes('?') ? '&' : '?';
-      shareUrl = pageUrl + sep + 'model=' + encodeURIComponent(modelUrl);
-      usedPage = true;
-    } else {
-      shareUrl = modelUrl;
-    }
-
-    qrcodeDiv.innerHTML = '';
-    qrcodeDiv.style.position = 'relative';
-    new QRCode(qrcodeDiv, {
-      text: shareUrl,
-      width: 180,
-      height: 180,
-      colorDark: '#151311',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-    shareLinkInput.value = shareUrl;
-    qrBlock.classList.add('show');
-    applyLogoOverlay();
-    if(usedPage){
-      showStatus('Model loaded. QR code points to your hosted page — this is the reliable option.', false);
-    } else {
-      showStatus('Model loaded. QR code points directly at the .glb file — behavior may vary across phones. Fill in "this tool\'s public URL" above for a more reliable link.', true);
-    }
-  }
-
-  document.getElementById('load-url-btn').addEventListener('click', () => {
-    loadFromUrl(document.getElementById('url-input').value.trim());
-  });
-
-  // If this page was opened via a QR code with ?model=..., load it automatically
-  (function autoLoadFromQuery(){
-    const params = new URLSearchParams(window.location.search);
-    const modelParam = params.get('model');
-    if(modelParam){
-      document.getElementById('url-input').value = modelParam;
-      loadFromUrl(modelParam);
-    }
-  })();
-
-  // --- Logo overlay ---
-  let logoDataUrl = null;
-  const logoInput = document.getElementById('logo-input');
-  const logoNote = document.getElementById('logo-note');
-
-  logoInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      logoDataUrl = reader.result;
-      applyLogoOverlay();
-      logoNote.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function applyLogoOverlay(){
-    const old = qrcodeDiv.querySelector('.qr-logo-wrap');
-    if(old) old.remove();
-    if(!logoDataUrl) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'qr-logo-wrap';
-    wrap.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:4px; border-radius:6px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px #fff;';
-    const img = document.createElement('img');
-    img.src = logoDataUrl;
-    img.style.cssText = 'width:34px; height:34px; object-fit:contain; display:block; border-radius:3px;';
-    wrap.appendChild(img);
-    qrcodeDiv.appendChild(wrap);
-  }
-
-  // --- Upload mode ---
-  const dropZone = document.getElementById('drop-zone');
-  const fileInput = document.getElementById('file-input');
-  const fnameEl = document.getElementById('fname');
-
-  dropZone.addEventListener('click', () => fileInput.click());
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag');
-    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-  });
-  fileInput.addEventListener('change', e => {
-    if(e.target.files.length) handleFile(e.target.files[0]);
-  });
-
-  function handleFile(file){
-    if(!file.name.toLowerCase().endsWith('.glb')){
-      showStatus('Please choose a .glb file.', true);
-      return;
-    }
-    fnameEl.textContent = file.name;
-    const blobUrl = URL.createObjectURL(file);
-    statusEl.classList.remove('show');
-    buildViewer(blobUrl, false);
-    arHint.textContent = '';
-    qrBlock.classList.remove('show');
-    showStatus('Previewing "' + file.name + '" locally. Host it online (URL tab) to generate an AR QR code.', false);
-  }
-
-  document.getElementById('copy-btn').addEventListener('click', () => {
-    shareLinkInput.select();
-    document.execCommand('copy');
-    const btn = document.getElementById('copy-btn');
-    const orig = btn.textContent;
-    btn.textContent = 'Copied';
-    setTimeout(() => btn.textContent = orig, 1200);
-  });
-</script>
-
+  </script>
 </body>
 </html>
